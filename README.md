@@ -1,7 +1,7 @@
 # EngineerHub
 
 > **Projet de 2ᵉ année CI – Ingénierie des Systèmes Informatiques**  
-> Réalisé par **M. Ayoub Mengad** • Encadrant : _[à renseigner]_  
+> Réalisé par **M. Ayoub Mengad**
 > Année universitaire 2024 – 2025
 
 ---
