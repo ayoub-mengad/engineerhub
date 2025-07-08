@@ -1,7 +1,7 @@
 # EngineerHub
 
 > **Projet de 2ᵉ année CI – Ingénierie des Systèmes Informatiques**  
-> Réalisé par **M. Ayoub Mengad** • Encadrant : _[à renseigner]_  
+> Réalisé par **M. Ayoub Mengad**
 > Année universitaire 2024 – 2025
 
 ---
@@ -75,7 +75,7 @@ Le projet illustre :
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/<votre-org>/engineerhub.git
+git clone https://github.com/ayoub-mengad/engineerhub.git
 cd engineerhub
 
 # 2. Back-end
