@@ -18,6 +18,9 @@
         <div class="min-h-screen bg-[#F3F6F9]">
             @include('layouts.navigation')
 
+            <!-- Notifications -->
+            <x-notifications />
+
             <!-- Page Content -->
             <main class="pt-16">
                 {{ $slot }}

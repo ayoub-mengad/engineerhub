@@ -6,6 +6,7 @@ use App\Contracts\PromptLogRepositoryInterface;
 use App\Models\PromptLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PromptLogRepository implements PromptLogRepositoryInterface
 {
@@ -19,11 +20,11 @@ class PromptLogRepository implements PromptLogRepositoryInterface
         return PromptLog::create($data);
     }
     
-    public function getByUser(User $user): Collection
+    public function getByUser(User $user): LengthAwarePaginator
     {
         return PromptLog::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(15);
     }
     
     public function getRecentByUser(User $user, int $limit = 10): Collection

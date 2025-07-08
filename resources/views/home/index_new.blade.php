@@ -38,11 +38,11 @@
                 <!-- AI Post Generator -->
                 <div class="bg-white rounded-lg shadow-sm p-4">
                     <h3 class="text-lg font-medium mb-4 text-[#202124]">🤖 AI Post Generator</h3>
-                    <form id="generatePostFormMobile" class="space-y-4">
+                    <form id="generatePostForm" class="space-y-4">
                         @csrf
                         <div>
                             <textarea 
-                                id="ideaInputMobile" 
+                                id="ideaInput" 
                                 placeholder="Describe your engineering project, idea, or topic..." 
                                 rows="3" 
                                 class="w-full border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#0A66C2] focus:border-[#0A66C2] text-[15px] leading-6"
@@ -50,21 +50,21 @@
                         </div>
                         <button 
                             type="submit" 
-                            id="generateBtnMobile"
+                            id="generateBtn"
                             class="bg-[#0A66C2] hover:bg-[#004182] text-white font-semibold rounded-lg px-4 py-2 transition-colors duration-150">
                             Generate Post ✨
                         </button>
                     </form>
                     
-                    <div id="generatedContentMobile" class="mt-4 hidden">
+                    <div id="generatedContent" class="mt-4 hidden">
                         <div class="bg-[#F3F6F9] p-4 rounded-lg">
                             <h4 class="font-medium mb-2">Generated Content:</h4>
-                            <div id="generatedTextMobile" class="text-gray-600 mb-4 text-[15px] leading-6"></div>
+                            <div id="generatedText" class="text-gray-600 mb-4 text-[15px] leading-6"></div>
                             <form action="{{ route('posts.store') }}" method="POST" class="space-y-3">
                                 @csrf
                                 <textarea 
                                     name="content" 
-                                    id="postContentMobile" 
+                                    id="postContent" 
                                     rows="4" 
                                     class="w-full border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#0A66C2] focus:border-[#0A66C2] text-[15px] leading-6"
                                     placeholder="Edit your post content..."></textarea>
@@ -366,161 +366,42 @@
     </div>
 
     <script>
-        // Fallback notification function if main one isn't loaded
-        if (typeof showNotification === 'undefined') {
-            function showNotification(type, message, suggestions = []) {
-                console.log(`${type.toUpperCase()}: ${message}`, suggestions);
-                
-                // Create a simple notification div
-                const notification = document.createElement('div');
-                notification.className = `fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
-                    type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
-                    type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
-                    type === 'warning' ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' :
-                    'bg-blue-50 border border-blue-200 text-blue-800'
-                }`;
-                
-                notification.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
-                            <div class="text-sm mt-1">${message}</div>
-                            ${suggestions.length ? `<ul class="text-xs mt-2 list-disc list-inside">${suggestions.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
-                        </div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-lg">&times;</button>
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                
-                // Auto remove after 5 seconds
-                setTimeout(() => {
-                    if (notification.parentElement) {
-                        notification.remove();
-                    }
-                }, 5000);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing AI generation...');
+        document.getElementById('generatePostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Initialize both desktop and mobile forms
-            initializeAIForm('generatePostForm', 'generateBtn', 'ideaInput', 'generatedText', 'postContent', 'generatedContent');
-            initializeAIForm('generatePostFormMobile', 'generateBtnMobile', 'ideaInputMobile', 'generatedTextMobile', 'postContentMobile', 'generatedContentMobile');
+            const btn = document.getElementById('generateBtn');
+            const idea = document.getElementById('ideaInput').value;
+            
+            if (!idea.trim()) return;
+            
+            btn.textContent = 'Generating... ⏳';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('{{ route("posts.generate") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ idea })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('generatedText').textContent = data.content;
+                    document.getElementById('postContent').value = data.content;
+                    document.getElementById('generatedContent').classList.remove('hidden');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to generate content'));
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            } finally {
+                btn.textContent = 'Generate Post ✨';
+                btn.disabled = false;
+            }
         });
-        
-        function initializeAIForm(formId, btnId, inputId, textId, contentId, containerId) {
-            const form = document.getElementById(formId);
-            const btn = document.getElementById(btnId);
-            const ideaInput = document.getElementById(inputId);
-            
-            console.log(`Initializing ${formId}:`, {
-                form: !!form,
-                btn: !!btn,
-                ideaInput: !!ideaInput
-            });
-            
-            if (!form || !btn || !ideaInput) {
-                console.error(`Required elements not found for ${formId}:`, {form, btn, ideaInput});
-                return;
-            }
-
-            form.addEventListener('submit', async (e) => {
-                console.log(`Form ${formId} submitted!`);
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const idea = ideaInput.value;
-                console.log('Idea entered:', idea);
-                
-                if (!idea.trim()) {
-                    console.log('Empty idea, showing error');
-                    showNotification('error', 'Please enter an idea or topic for your post.', ['Describe your engineering project or idea', 'Be specific about what you want to share']);
-                    return;
-                }
-                
-                // Double check we prevented the default
-                console.log('Event prevented, continuing with AJAX...');
-                
-                btn.textContent = 'Generating... ⏳';
-                btn.disabled = true;
-                
-                console.log('Starting API request...');
-                
-                try {
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-                    console.log('CSRF token found:', !!csrfToken);
-                    
-                    const requestData = { idea: idea };
-                    console.log('Request data:', requestData);
-                    
-                    const response = await fetch('{{ route("posts.generate") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-                    
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    console.log('Response data:', data);
-                    
-                    if (data.success) {
-                        const generatedText = document.getElementById(textId);
-                        const postContent = document.getElementById(contentId);
-                        const generatedContent = document.getElementById(containerId);
-                        
-                        console.log('Elements for display:', {
-                            generatedText: !!generatedText,
-                            postContent: !!postContent,
-                            generatedContent: !!generatedContent
-                        });
-                        
-                        if (generatedText && postContent && generatedContent) {
-                            generatedText.textContent = data.content;
-                            postContent.value = data.content;
-                            generatedContent.classList.remove('hidden');
-                            console.log('Content displayed successfully');
-                        }
-                        
-                        // Show success notification
-                        showNotification('success', 'Post content generated successfully! You can edit it before posting.');
-                        
-                        // Show fallback message if applicable
-                        if (data.is_fallback) {
-                            showNotification('warning', data.fallback_message || 'Content generated using backup templates due to AI service unavailability.');
-                        }
-                    } else {
-                        console.log('Request failed:', data);
-                        // Show error notification with suggestions
-                        showNotification('error', data.error || 'Failed to generate post content.', data.suggestions || []);
-                    }
-                } catch (error) {
-                    console.error('AI Generation Error:', error);
-                    // Network or other errors
-                    showNotification('error', 'Unable to connect to the server. Please check your internet connection and try again.', [
-                        'Check your internet connection',
-                        'Refresh the page and try again',
-                        'Try creating your post manually'
-                    ]);
-                } finally {
-                    console.log('Resetting button...');
-                    btn.textContent = 'Generate Post ✨';
-                    btn.disabled = false;
-                }
-            });
-            
-            console.log(`AI Generation form ${formId} initialized successfully!`);
-        }
     </script>
 </x-app-layout>

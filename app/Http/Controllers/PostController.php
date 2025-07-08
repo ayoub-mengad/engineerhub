@@ -47,16 +47,28 @@ class PostController extends Controller
         $result = $this->aiService->generatePostContent($request->idea, auth()->user());
 
         if ($result['success']) {
-            return response()->json([
+            $response = [
                 'success' => true,
-                'content' => $result['response']
-            ]);
+                'content' => $result['response'],
+                'latency_ms' => $result['latency_ms'] ?? 0
+            ];
+            
+            // Add fallback information if applicable
+            if (isset($result['is_fallback']) && $result['is_fallback']) {
+                $response['is_fallback'] = true;
+                $response['fallback_message'] = 'AI service is temporarily unavailable. We generated content using our backup templates. You can edit it before posting.';
+            }
+            
+            return response()->json($response);
         }
 
+        // Return error with suggestions for AJAX handling
         return response()->json([
             'success' => false,
-            'error' => $result['error']
-        ], 500);
+            'error' => $result['error'],
+            'error_type' => $result['error_type'] ?? 'unknown',
+            'suggestions' => $this->getErrorSuggestions($result['error_type'] ?? 'unknown')
+        ], 422); // Use 422 for validation errors
     }
 
     public function destroy(int $id): RedirectResponse
@@ -68,5 +80,40 @@ class PostController extends Controller
         }
 
         return redirect()->route('home')->with('error', $result['message']);
+    }
+    
+    private function getErrorSuggestions(string $errorType): array
+    {
+        switch ($errorType) {
+            case 'configuration':
+                return [
+                    'Contact support to configure AI service',
+                    'Try again later when service is configured'
+                ];
+            case 'connection':
+                return [
+                    'Check your internet connection',
+                    'Try again in a few moments',
+                    'Use manual post creation instead'
+                ];
+            case 'client_error':
+                return [
+                    'Try rephrasing your idea',
+                    'Make your idea more specific',
+                    'Use shorter, clearer descriptions'
+                ];
+            case 'server_error':
+                return [
+                    'AI service is temporarily down',
+                    'Try again in a few minutes',
+                    'Create your post manually for now'
+                ];
+            default:
+                return [
+                    'Try refreshing the page',
+                    'Rephrase your idea and try again',
+                    'Create your post manually'
+                ];
+        }
     }
 }

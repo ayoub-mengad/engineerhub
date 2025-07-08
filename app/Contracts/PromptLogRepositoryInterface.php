@@ -5,6 +5,7 @@ namespace App\Contracts;
 use App\Models\PromptLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface PromptLogRepositoryInterface
 {
@@ -12,7 +13,7 @@ interface PromptLogRepositoryInterface
     
     public function create(array $data): PromptLog;
     
-    public function getByUser(User $user): Collection;
+    public function getByUser(User $user): LengthAwarePaginator;
     
     public function getRecentByUser(User $user, int $limit = 10): Collection;
     

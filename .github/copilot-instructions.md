@@ -23,6 +23,8 @@ This is a Laravel 12 social media platform specifically designed for engineers, 
 - Use type hints and return types
 - Handle errors gracefully with try-catch blocks
 - Include proper validation in form requests
+- Use Laravel flash messages for notifications (success, error, warning, info)
+- Include error_suggestions array for detailed user guidance
 
 ## Database Schema
 - `users`: Standard Laravel users table
